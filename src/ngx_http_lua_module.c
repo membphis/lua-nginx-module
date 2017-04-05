@@ -17,6 +17,7 @@
 #include "ngx_http_lua_rewriteby.h"
 #include "ngx_http_lua_accessby.h"
 #include "ngx_http_lua_logby.h"
+#include "ngx_http_lua_intercept_logby.h"
 #include "ngx_http_lua_util.h"
 #include "ngx_http_lua_headerfilterby.h"
 #include "ngx_http_lua_bodyfilterby.h"
@@ -295,6 +296,14 @@ static ngx_command_t ngx_http_lua_cmds[] = {
       NGX_HTTP_LOC_CONF_OFFSET,
       0,
       (void *) ngx_http_lua_log_handler_inline },
+
+    { ngx_string("intercept_log_by_lua_block"),
+      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF
+                        |NGX_CONF_BLOCK|NGX_CONF_NOARGS,
+      ngx_http_lua_intercept_log_by_lua_block,
+      NGX_HTTP_LOC_CONF_OFFSET,
+      0,
+      (void *) ngx_http_lua_intercept_log_handler_inline },
 
     { ngx_string("rewrite_by_lua_file"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF
@@ -689,6 +698,10 @@ ngx_http_lua_init(ngx_conf_t *cf)
         }
 
         *h = ngx_http_lua_log_handler;
+    }
+
+    if (lmcf->requires_intercept_log) {
+        cf->cycle->intercept_log = ngx_http_lua_intercept_log_handler;
     }
 
     if (multi_http_blocks || lmcf->requires_header_filter) {

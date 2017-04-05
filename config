@@ -306,6 +306,7 @@ ngx_addon_name=ngx_http_lua_module
 HTTP_LUA_SRCS=" \
             $ngx_addon_dir/src/ngx_http_lua_script.c \
             $ngx_addon_dir/src/ngx_http_lua_log.c \
+            $ngx_addon_dir/src/ngx_http_lua_intercept_logby.c \
             $ngx_addon_dir/src/ngx_http_lua_subrequest.c \
             $ngx_addon_dir/src/ngx_http_lua_ndk.c \
             $ngx_addon_dir/src/ngx_http_lua_control.c \
@@ -366,6 +367,7 @@ HTTP_LUA_DEPS=" \
             $ngx_addon_dir/src/ddebug.h \
             $ngx_addon_dir/src/ngx_http_lua_script.h \
             $ngx_addon_dir/src/ngx_http_lua_log.h \
+            $ngx_addon_dir/src/ngx_http_lua_intercept_logby.h \
             $ngx_addon_dir/src/ngx_http_lua_subrequest.h \
             $ngx_addon_dir/src/ngx_http_lua_ndk.h \
             $ngx_addon_dir/src/ngx_http_lua_control.h \

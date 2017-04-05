@@ -139,6 +139,8 @@ typedef ngx_int_t (*ngx_http_lua_main_conf_handler_pt)(ngx_log_t *log,
     ngx_http_lua_main_conf_t *lmcf, lua_State *L);
 typedef ngx_int_t (*ngx_http_lua_srv_conf_handler_pt)(ngx_http_request_t *r,
     ngx_http_lua_srv_conf_t *lscf, lua_State *L);
+typedef ngx_int_t (*ngx_http_intercept_log_handler_pt)(ngx_log_t *log,
+    ngx_uint_t level, void *buf, size_t n);
 
 
 typedef struct {
@@ -191,6 +193,12 @@ struct ngx_http_lua_main_conf_s {
                      * thus it is safe to store the peer data in the main conf.
                      */
 
+    ngx_http_intercept_log_handler_pt       intercept_log_handler;
+    u_char                      *intercept_log_chunkname;
+    ngx_http_complex_value_t     intercept_log_src;     /* log_by_lua inline script/script
+                                                 file path */
+    u_char                      *intercept_log_src_key; /* cached key for log_src */
+
     ngx_uint_t                      shm_zones_inited;
 
     ngx_http_lua_sema_mm_t         *sema_mm;
@@ -205,6 +213,7 @@ struct ngx_http_lua_main_conf_s {
     unsigned             requires_rewrite:1;
     unsigned             requires_access:1;
     unsigned             requires_log:1;
+    unsigned             requires_intercept_log:1;
     unsigned             requires_shm:1;
 };
 
