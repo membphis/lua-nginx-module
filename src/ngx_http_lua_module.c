@@ -351,6 +351,14 @@ static ngx_command_t ngx_http_lua_cmds[] = {
       0,
       (void *) ngx_http_lua_log_handler_file },
 
+    { ngx_string("intercept_log_by_lua_file"),
+      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF
+                        |NGX_CONF_TAKE1,
+      ngx_http_lua_intercept_log_by_lua,
+      NGX_HTTP_LOC_CONF_OFFSET,
+      0,
+      (void *) ngx_http_lua_intercept_log_handler_file },
+
     /* header_filter_by_lua <inline script> */
     { ngx_string("header_filter_by_lua"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF
@@ -701,7 +709,7 @@ ngx_http_lua_init(ngx_conf_t *cf)
     }
 
     if (lmcf->requires_intercept_log) {
-        cf->cycle->intercept_log = ngx_http_lua_intercept_log_handler;
+        cf->cycle->intercept_log = (ngx_log_intercept_pt)ngx_http_lua_intercept_log_handler;
     }
 
     if (multi_http_blocks || lmcf->requires_header_filter) {
@@ -1120,6 +1128,13 @@ ngx_http_lua_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
         conf->log_handler = prev->log_handler;
         conf->log_src_key = prev->log_src_key;
         conf->log_chunkname = prev->log_chunkname;
+    }
+
+    if (conf->intercept_log_src.value.len == 0) {
+        conf->intercept_log_src = prev->intercept_log_src;
+        conf->intercept_log_handler = prev->intercept_log_handler;
+        conf->intercept_log_src_key = prev->intercept_log_src_key;
+        conf->intercept_log_chunkname = prev->intercept_log_chunkname;
     }
 
     if (conf->header_filter_src.value.len == 0) {
