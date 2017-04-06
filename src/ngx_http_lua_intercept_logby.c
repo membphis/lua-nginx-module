@@ -32,8 +32,14 @@
 #include <malloc.h>
 #endif
 
+/* keys in Lua thread for fetching args and nargs in set_by_lua* */
+
+#define ngx_http_lua_nargs_key  "__ngx_nargs"
+#define ngx_http_lua_args_key  "__ngx_args"
 
 static ngx_int_t ngx_http_lua_intercept_log_by_chunk(lua_State *L, ngx_http_request_t *r);
+
+ngx_http_variable_value_t args[2];
 
 static void
 ngx_http_lua_intercept_log_by_lua_env(lua_State *L, ngx_http_request_t *r)
@@ -43,6 +49,24 @@ ngx_http_lua_intercept_log_by_lua_env(lua_State *L, ngx_http_request_t *r)
 
     //lua_pushnumber(L, 22222);
     //lua_setglobal(L, "log_level");
+    //lua_pushstring(L, "log dddddddd");
+    //lua_setglobal(L, "log_data");
+    args[0].data = "112233";
+    args[0].valid=1;
+    args[0].len = 6;
+    args[1].data = "4444444444";
+    args[1].valid=1;
+    args[1].len = 10;
+
+    lua_pushinteger(L, 2);
+    lua_setglobal(L, ngx_http_lua_nargs_key);
+
+    lua_pushlightuserdata(L, args);
+    lua_setglobal(L, ngx_http_lua_args_key);
+
+    //lua_pushlightuserdata(L, args);
+    //lua_setglobal(L, ngx_http_lua_args_key);
+
     /**
      * we want to create empty environment for current script
      *
@@ -85,6 +109,8 @@ ngx_http_lua_intercept_log_handler(ngx_log_t *log,
         printf("intercept_log only support http log now\n");
         return NGX_DECLINED;
     }
+
+    printf("intercept log ===> : %s\n", (const char *)buf);
 
     //lmcf = ngx_http_get_module_main_conf(r, ngx_http_lua_module);
     llcf = ngx_http_get_module_loc_conf(r, ngx_http_lua_module);
@@ -160,6 +186,7 @@ ngx_http_lua_intercept_log_handler_file(ngx_http_request_t *r,
 ngx_int_t
 ngx_http_lua_intercept_log_by_chunk(lua_State *L, ngx_http_request_t *r)
 {
+    size_t           i;
     ngx_int_t        rc;
     u_char          *err_msg;
     size_t           len;
@@ -175,6 +202,13 @@ ngx_http_lua_intercept_log_by_chunk(lua_State *L, ngx_http_request_t *r)
         /* initialize nginx context in Lua VM, code chunk at stack top sp = 1 */
         ngx_http_lua_intercept_log_by_lua_env(L, r);
 
+        //for (i = 0; i < 2; i++) {
+        //    lua_pushlstring(L, (const char *) args[i].data, args[i].len);
+        //    printf("logby %s\n", args[i].data);
+        //}
+        lua_pushlstring(L, "3333333", 5);
+        lua_pushlstring(L, "4444444", 5);
+
 #if (NGX_PCRE)
         /* XXX: work-around to nginx regex subsystem */
         old_pool = ngx_http_lua_pcre_malloc_init(r->pool);
@@ -184,7 +218,7 @@ ngx_http_lua_intercept_log_by_chunk(lua_State *L, ngx_http_request_t *r)
         lua_insert(L, 1);  /* put it under chunk and args */
 
         /*  protected call user code */
-        rc = lua_pcall(L, 0, 1, 1);
+        rc = lua_pcall(L, 2, 1, 1);
 
         lua_remove(L, 1);  /* remove traceback function */
 

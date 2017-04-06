@@ -2923,9 +2923,10 @@ ngx_http_lua_param_get(lua_State *L)
     }
 
     ngx_http_lua_check_context(L, ctx, NGX_HTTP_LUA_CONTEXT_SET
-                               | NGX_HTTP_LUA_CONTEXT_BODY_FILTER);
+                               | NGX_HTTP_LUA_CONTEXT_BODY_FILTER
+                               | NGX_HTTP_LUA_CONTEXT_ACCESS);
 
-    if (ctx->context & (NGX_HTTP_LUA_CONTEXT_SET)) {
+    if (ctx->context & (NGX_HTTP_LUA_CONTEXT_SET | NGX_HTTP_LUA_CONTEXT_ACCESS)) {
         return ngx_http_lua_setby_param_get(L);
     }
 
