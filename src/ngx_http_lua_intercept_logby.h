@@ -12,10 +12,6 @@
 
 ngx_int_t ngx_http_lua_intercept_log_handler(ngx_log_t *log,
     ngx_uint_t level, void *buf, size_t n);
-ngx_int_t ngx_http_lua_intercept_log_handler_inline(ngx_http_request_t *r,
-    ngx_uint_t level, void *buf, size_t n);
-ngx_int_t ngx_http_lua_intercept_log_handler_file(ngx_http_request_t *r,
-    ngx_uint_t level, void *buf, size_t n);
 void ngx_http_lua_inject_intercept_logby_ngx_api(ngx_conf_t *cf, lua_State *L);
 
 

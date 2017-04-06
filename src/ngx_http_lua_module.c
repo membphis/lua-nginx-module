@@ -303,7 +303,7 @@ static ngx_command_t ngx_http_lua_cmds[] = {
       ngx_http_lua_intercept_log_by_lua_block,
       NGX_HTTP_LOC_CONF_OFFSET,
       0,
-      (void *) ngx_http_lua_intercept_log_handler_inline },
+      NULL },
 
     { ngx_string("rewrite_by_lua_file"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF
@@ -350,14 +350,6 @@ static ngx_command_t ngx_http_lua_cmds[] = {
       NGX_HTTP_LOC_CONF_OFFSET,
       0,
       (void *) ngx_http_lua_log_handler_file },
-
-    { ngx_string("intercept_log_by_lua_file"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF
-                        |NGX_CONF_TAKE1,
-      ngx_http_lua_intercept_log_by_lua,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      0,
-      (void *) ngx_http_lua_intercept_log_handler_file },
 
     /* header_filter_by_lua <inline script> */
     { ngx_string("header_filter_by_lua"),

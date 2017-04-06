@@ -19,6 +19,7 @@
 static int ngx_http_lua_ngx_get(lua_State *L);
 static int ngx_http_lua_ngx_set(lua_State *L);
 static int ngx_http_lua_ngx_req_is_internal(lua_State *L);
+static int ngx_http_lua_ngx_req_get_intercept_log(lua_State *L);
 
 
 void
@@ -39,6 +40,9 @@ ngx_http_lua_inject_req_misc_api(lua_State *L)
 {
     lua_pushcfunction(L, ngx_http_lua_ngx_req_is_internal);
     lua_setfield(L, -2, "is_internal");
+
+    lua_pushcfunction(L, ngx_http_lua_ngx_req_get_intercept_log);
+    lua_setfield(L, -2, "get_intercept_log");
 }
 
 
@@ -53,6 +57,37 @@ ngx_http_lua_ngx_req_is_internal(lua_State *L)
     }
 
     lua_pushboolean(L, r->internal == 1);
+    return 1;
+}
+
+
+static int
+ngx_http_lua_ngx_req_get_intercept_log(lua_State *L)
+{
+    ngx_http_request_t  *r;
+    ngx_array_t         *logs;
+    ngx_str_t           *log_str;
+    ngx_uint_t           i;
+
+    r = ngx_http_lua_get_req(L);
+    if (r == NULL) {
+        return luaL_error(L, "no request object found");
+    }
+
+    logs = r->intercept_logs;
+    r->intercept_logs = NULL;
+
+    lua_createtable(L, logs->nelts, 0);
+    log_str = (ngx_str_t *)(logs->elts);
+    for (i = 0; i < logs->nelts; i++)
+    {
+        lua_pushlstring(L, (char *) log_str[i].data, log_str[i].len);
+        lua_rawseti(L, -2, i + 1);
+
+        printf("push table: %s\n", log_str[i].data);
+    }
+    printf("push table count: %d\n", logs->nelts);
+
     return 1;
 }
 

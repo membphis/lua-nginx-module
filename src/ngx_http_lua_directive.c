@@ -933,53 +933,28 @@ ngx_http_lua_intercept_log_by_lua(ngx_conf_t *cf, ngx_command_t *cmd, void *conf
         return NGX_CONF_ERROR;
     }
 
-    if (cmd->post == ngx_http_lua_intercept_log_handler_inline) {
-        chunkname = ngx_http_lua_gen_chunk_name(cf, "intercept_log_by_lua",
-                                                sizeof("intercept_log_by_lua") - 1);
-        if (chunkname == NULL) {
-            return NGX_CONF_ERROR;
-        }
 
-        llcf->intercept_log_chunkname = chunkname;
+    ngx_memzero(&ccv, sizeof(ngx_http_compile_complex_value_t));
+    ccv.cf = cf;
+    ccv.value = &value[1];
+    ccv.complex_value = &llcf->intercept_log_src;
 
-        /* Don't eval nginx variables for inline lua code */
+    if (ngx_http_compile_complex_value(&ccv) != NGX_OK) {
+        return NGX_CONF_ERROR;
+    }
 
-        llcf->intercept_log_src.value = value[1];
-
-        p = ngx_palloc(cf->pool, NGX_HTTP_LUA_INLINE_KEY_LEN + 1);
+    if (llcf->intercept_log_src.lengths == NULL) {
+        /* no variable found */
+        p = ngx_palloc(cf->pool, NGX_HTTP_LUA_FILE_KEY_LEN + 1);
         if (p == NULL) {
             return NGX_CONF_ERROR;
         }
 
         llcf->intercept_log_src_key = p;
 
-        p = ngx_copy(p, NGX_HTTP_LUA_INLINE_TAG, NGX_HTTP_LUA_INLINE_TAG_LEN);
+        p = ngx_copy(p, NGX_HTTP_LUA_FILE_TAG, NGX_HTTP_LUA_FILE_TAG_LEN);
         p = ngx_http_lua_digest_hex(p, value[1].data, value[1].len);
         *p = '\0';
-
-    } else {
-        ngx_memzero(&ccv, sizeof(ngx_http_compile_complex_value_t));
-        ccv.cf = cf;
-        ccv.value = &value[1];
-        ccv.complex_value = &llcf->intercept_log_src;
-
-        if (ngx_http_compile_complex_value(&ccv) != NGX_OK) {
-            return NGX_CONF_ERROR;
-        }
-
-        if (llcf->intercept_log_src.lengths == NULL) {
-            /* no variable found */
-            p = ngx_palloc(cf->pool, NGX_HTTP_LUA_FILE_KEY_LEN + 1);
-            if (p == NULL) {
-                return NGX_CONF_ERROR;
-            }
-
-            llcf->intercept_log_src_key = p;
-
-            p = ngx_copy(p, NGX_HTTP_LUA_FILE_TAG, NGX_HTTP_LUA_FILE_TAG_LEN);
-            p = ngx_http_lua_digest_hex(p, value[1].data, value[1].len);
-            *p = '\0';
-        }
     }
 
     llcf->intercept_log_handler = (ngx_http_intercept_log_handler_pt) cmd->post;
