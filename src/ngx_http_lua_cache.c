@@ -262,7 +262,10 @@ ngx_http_lua_cache_loadfile(ngx_log_t *log, lua_State *L,
        cache_key, lua_gettop(L), script);
 
     /*  load closure factory of script file to the top of lua stack, sp++ */
-    rc = luaL_loadfile(L, (char *) script);
+    if (1)
+        rc = luaL_loadfile(L, (char *) script);
+    else
+        rc = ngx_http_lua_clfactory_loadfile(L, (char *) script);
 
     dd("loadfile returns %d (%d)", (int) rc, LUA_ERRFILE);
 
