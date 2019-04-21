@@ -722,8 +722,7 @@ ngx_http_lua_clfactory_loadfile(lua_State *L, const char *filename)
 #else
     ungetc(c, lf.f);
 #endif
-    status = lua_load(L, ngx_http_lua_clfactory_getF, &lf,
-                      lua_tostring(L, -1));
+    status = luaL_loadfile(L, filename);
 
     readstatus = ferror(lf.f);
 
