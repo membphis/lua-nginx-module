@@ -119,6 +119,10 @@ jobs:
           # Sibling repos — build scripts reference them via $root/../<name>
           git clone --depth=1 https://github.com/openresty/openresty.git             ../openresty
           git clone --depth=1 https://github.com/openresty/no-pool-nginx.git         ../no-pool-nginx
+          # The upstream patch still carries 1.31.1's numeric nginx_version.
+          perl -0pi -e \
+            's/#define nginx_version      1031001/#define nginx_version      1031002/' \
+            ../no-pool-nginx/nginx-1.31.2-no_pool.patch
           git clone --depth=1 https://github.com/openresty/lua-upstream-nginx-module.git ../lua-upstream-nginx-module
           git clone --depth=1 https://github.com/openresty/echo-nginx-module.git         ../echo-nginx-module
           git clone --depth=1 https://github.com/openresty/nginx-eval-module.git         ../nginx-eval-module
