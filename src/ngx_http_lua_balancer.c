@@ -59,13 +59,21 @@ struct ngx_http_lua_balancer_peer_data_s {
     ngx_str_t                          *addr_text;
 
     int                                 last_peer_state;
+    off_t                               last_bytes_sent;
 
 #if !(HAVE_NGX_UPSTREAM_TIMEOUT_FIELDS)
     unsigned                            cloned_upstream_conf:1;
 #endif
 
+    unsigned                            last_request_sent:1;
+    unsigned                            last_request_body_sent:1;
     unsigned                            keepalive:1;
 };
+
+
+#define NGX_HTTP_LUA_BALANCER_SEND_NONE      0
+#define NGX_HTTP_LUA_BALANCER_SEND_PARTIAL   1
+#define NGX_HTTP_LUA_BALANCER_SEND_COMPLETE  2
 
 
 #if (NGX_HTTP_SSL)
@@ -594,6 +602,15 @@ ngx_http_lua_balancer_free_peer(ngx_peer_connection_t *pc, void *data,
 
     if (bp->sockaddr && bp->socklen) {
         bp->last_peer_state = (int) state;
+        bp->last_request_sent = u->request_sent;
+        bp->last_request_body_sent = u->request_body_sent;
+
+        if (u->state) {
+            bp->last_bytes_sent = u->state->bytes_sent;
+
+        } else {
+            bp->last_bytes_sent = c ? c->sent : 0;
+        }
 
         if (pc->tries) {
             pc->tries--;
@@ -1250,6 +1267,52 @@ ngx_http_lua_ffi_balancer_get_last_failure(ngx_http_request_t *r,
     }
 
     return bp->last_peer_state;
+}
+
+
+int
+ngx_http_lua_ffi_balancer_get_last_send_state(ngx_http_request_t *r,
+    off_t *bytes, char **err)
+{
+    ngx_http_lua_ctx_t                 *ctx;
+    ngx_http_upstream_t                *u;
+    ngx_http_lua_balancer_peer_data_t  *bp;
+
+    if (r == NULL) {
+        *err = "no request found";
+        return NGX_ERROR;
+    }
+
+    u = r->upstream;
+
+    if (u == NULL) {
+        *err = "no upstream found";
+        return NGX_ERROR;
+    }
+
+    ctx = ngx_http_get_module_ctx(r, ngx_http_lua_module);
+    if (ctx == NULL) {
+        *err = "no ctx found";
+        return NGX_ERROR;
+    }
+
+    if ((ctx->context & NGX_HTTP_LUA_CONTEXT_BALANCER) == 0) {
+        *err = "API disabled in the current context";
+        return NGX_ERROR;
+    }
+
+    bp = (ngx_http_lua_balancer_peer_data_t *) u->peer.data;
+    *bytes = bp->last_bytes_sent;
+
+    if (bp->last_request_body_sent) {
+        return NGX_HTTP_LUA_BALANCER_SEND_COMPLETE;
+    }
+
+    if (bp->last_bytes_sent > 0) {
+        return NGX_HTTP_LUA_BALANCER_SEND_PARTIAL;
+    }
+
+    return NGX_HTTP_LUA_BALANCER_SEND_NONE;
 }
 
 
